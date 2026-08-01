@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Golf Strength · 6-Week Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --iron:#15181d; --iron2:#1d2129; --line:#2b303b;
+    --chalk:#ece7dc; --chalk-dim:#9aa0ab;
+    --fairway:#5fa06a; --fairway-deep:#3c7a49;
+    --sand:#c9a96a;
+    --danger:#c0704f;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; background:var(--iron); color:var(--chalk);
+    font-family:'Inter',-apple-system,sans-serif; font-size:15px; line-height:1.4}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+
+  /* ---------- header ---------- */
+  header{position:sticky; top:0; z-index:10; background:var(--iron);
+    border-bottom:1px solid var(--line);
+    padding:calc(10px + env(safe-area-inset-top)) 16px 0}
+  .brand{display:flex; align-items:baseline; justify-content:space-between}
+  .brand h1{font-family:'Barlow Condensed'; font-weight:700; font-size:20px;
+    letter-spacing:.06em; text-transform:uppercase; margin:0}
+  .brand h1 em{font-style:normal; color:var(--sand)}
+  .day-progress{font-family:'IBM Plex Mono'; font-size:12px; color:var(--chalk-dim)}
+  .day-progress b{color:var(--fairway)}
+
+  .weeks{display:flex; gap:6px; margin:10px 0}
+  .wk{flex:1; border:1px solid var(--line); background:none; color:var(--chalk-dim);
+    font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.04em;
+    padding:6px 0; border-radius:6px; cursor:pointer}
+  .wk.on{background:var(--sand); border-color:var(--sand); color:#1a1a14}
+  .wk.deload{border-style:dashed}
+  .wk:focus-visible,.day:focus-visible,button:focus-visible{outline:2px solid var(--sand); outline-offset:2px}
+
+  .days{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; scrollbar-width:none}
+  .days::-webkit-scrollbar{display:none}
+  .day{white-space:nowrap; border:1px solid var(--line); background:none; color:var(--chalk-dim);
+    font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.05em;
+    text-transform:uppercase; padding:7px 13px; border-radius:6px; cursor:pointer}
+  .day.on{background:var(--iron2); border-color:var(--fairway); color:var(--chalk)}
+
+  /* ---------- content ---------- */
+  main{padding:14px 16px 40px; max-width:640px; margin:0 auto}
+  .session-title{font-family:'Barlow Condensed'; font-weight:700; font-size:26px;
+    text-transform:uppercase; letter-spacing:.04em; margin:2px 0 0}
+  .session-sub{color:var(--chalk-dim); font-size:13px; margin:2px 0 14px}
+  .deload-tag{display:inline-block; font-family:'IBM Plex Mono'; font-size:11px;
+    color:var(--sand); border:1px solid var(--sand); border-radius:4px; padding:1px 7px;
+    margin-left:8px; vertical-align:middle; letter-spacing:.08em}
+
+  .block{margin-bottom:18px}
+  .eyebrow{font-family:'IBM Plex Mono'; font-size:11px; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--sand);
+    border-bottom:1px solid var(--line); padding-bottom:5px; margin-bottom:2px;
+    display:flex; justify-content:space-between}
+  .eyebrow .hint{color:var(--chalk-dim); letter-spacing:.02em; text-transform:none; font-weight:500}
+
+  .ex{padding:11px 0; border-bottom:1px solid var(--line)}
+  .ex:last-child{border-bottom:none}
+  .ex-top{display:flex; justify-content:space-between; gap:12px; align-items:baseline}
+  .ex-name{font-weight:600; font-size:15px}
+  .ex-load{font-family:'IBM Plex Mono'; font-weight:600; font-size:16px;
+    color:var(--fairway); white-space:nowrap}
+  .ex-load small{font-size:11px; color:var(--chalk-dim); font-weight:500}
+  .ex-scheme{font-family:'IBM Plex Mono'; font-size:12px; color:var(--chalk-dim); margin-top:1px}
+  .ex-note{font-size:12.5px; color:var(--chalk-dim); margin-top:4px}
+
+  /* plates = set toggles */
+  .plates{display:flex; gap:10px; margin-top:9px}
+  .plate{width:40px; height:40px; border-radius:50%; cursor:pointer;
+    border:2px solid var(--line); background:radial-gradient(circle at 50% 50%, var(--iron2) 28%, #232833 29%);
+    position:relative; transition:border-color .15s, background .15s; padding:0}
+  .plate::after{content:''; position:absolute; inset:0; margin:auto; width:8px; height:8px;
+    border-radius:50%; background:var(--iron); border:1px solid var(--line)}
+  .plate.done{border-color:var(--fairway);
+    background:radial-gradient(circle at 50% 50%, var(--fairway-deep) 28%, var(--fairway) 29%)}
+  .plate.done::after{border-color:var(--fairway-deep)}
+  @media (prefers-reduced-motion: no-preference){
+    .plate:active{transform:scale(.9)} .plate{transition:border-color .15s, background .15s, transform .08s}
+  }
+
+  /* ---------- setup ---------- */
+  .setup p{color:var(--chalk-dim); font-size:13.5px}
+  .field{display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:11px 0; border-bottom:1px solid var(--line)}
+  .field label{font-weight:600; font-size:14.5px}
+  .field label small{display:block; font-weight:400; font-size:12px; color:var(--chalk-dim)}
+  .field input{width:96px; background:var(--iron2); border:1px solid var(--line); border-radius:8px;
+    color:var(--chalk); font-family:'IBM Plex Mono'; font-weight:600; font-size:17px;
+    text-align:center; padding:9px 6px}
+  .field input:focus{border-color:var(--sand); outline:none}
+  .derived{font-family:'IBM Plex Mono'; font-size:12px; color:var(--fairway); text-align:right}
+  .btn{width:100%; margin-top:16px; padding:12px; border-radius:8px; border:1px solid var(--line);
+    background:none; color:var(--chalk-dim); font-family:'Barlow Condensed'; font-weight:600;
+    font-size:15px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer}
+  .btn.danger{border-color:var(--danger); color:var(--danger)}
+  .io{width:100%; min-height:88px; background:var(--iron2); border:1px solid var(--line);
+    border-radius:8px; color:var(--chalk); font-family:'IBM Plex Mono'; font-size:11px;
+    padding:8px; margin-top:10px; resize:vertical}
+  .io:focus{border-color:var(--sand); outline:none}
+  .btnrow{display:flex; gap:10px}
+  .btnrow .btn{margin-top:10px}
+  .storage-note{font-size:11.5px; color:var(--chalk-dim); margin-top:14px; text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Golf <em>Strength</em> · 6-Wk</h1>
+    <div class="day-progress" id="prog"></div>
+  </div>
+  <div class="weeks" id="weeks"></div>
+  <div class="days" id="days"></div>
+</header>
+<main id="main"></main>
+
+<script>
+/* ================= data ================= */
+const WD_PCT  = [.725,.75,.775,.70,.775,.80];
+const ROW_PCT = [.70,.725,.75,.675,.75,.775];
+const WE_MAIN = [[4,5,.75],[4,4,.80],[3,3,.85],[3,5,.725],[4,3,.875],[2,2,.925]];
+const WE_MAIN_NOTE = [
+  "Crisp bar speed. Rest 2–3 min.",
+  "Rest 2–3 min. No grinders yet.",
+  "Heavy, clean triples. Rest 3 min.",
+  "Deload — smooth and fast, leave fresh.",
+  "Rest 3+ min. Last set an honest RPE 8–9.",
+  "Peak week. Optional single at ~95% if the doubles fly."
+];
+const VO2 = [
+  ["4 × 2 min hard / 2 min easy","~18 min at 8–9/10 effort (~90% max HR)."],
+  ["4 × 3 min hard / 2 min easy","~22 min. Pace interval 1 so interval 4 is completable."],
+  ["4 × 4 min hard / 3 min easy","~28 min. The classic Norwegian 4×4."],
+  ["20 min easy Zone 2","Deload — conversational pace only."],
+  ["5 × 3 min hard / 2.5 min easy","~28 min. Hold week 3's hard pace."],
+  ["4 × 4 min hard / 3 min easy","~28 min. Beat week 3's output at the same effort."]
+];
+const DELOAD = 3;
+
+const ex = (name, sets, reps, o={}) => ({name, sets, reps, ...o});
+
+function dayDef(d, w){
+  const wd = WD_PCT[w], rw = ROW_PCT[w];
+  const [ms, mr, mp] = WE_MAIN[w];
+  const a = w===DELOAD?3:4, b = w===DELOAD?2:3;   // weekend superset volumes
+  if(d===1) return {title:"Day 1 · Bench", sub:"30-minute session", blocks:[
+    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
+    {label:"Circuit · 3 rounds", hint:"no rest", items:[
+      ex("Cable face pull",3,"15",{note:"Light — primes upper back for pressing."}),
+      ex("Dead bug",3,"10/side",{note:"Slow. Ribs down, low back glued to floor."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Bench press",3,"5",{lift:"bench",pct:wd,note:"1 empty-bar + 1 light set first."}) ]},
+    {label:"Athletic superset · 3 rounds", items:[
+      ex("Med ball rotational throw",3,"8/side",{load:"10–12 lb",note:"Too loud? Sub explosive cable rotation."}),
+      ex("Single-arm DB row",3,"10/side",{load:"RPE 7–8"}) ]}
+  ]};
+  if(d===2) return {title:"Day 2 · Overhead Press", sub:"30-minute session", blocks:[
+    {label:"VO2 sprinkle", hint:"~5 min", items:[
+      ex("30s hard / 30s easy intervals",1,"5 min",{note:"After 1 easy min, alternate 30/30 at 8/10 effort."}) ]},
+    {label:"Circuit · 3 rounds", hint:"no rest", items:[
+      ex("Cable external rotation",3,"12/side",{note:"Light — cuff prep."}),
+      ex("Hanging knee raise",3,"10",{note:"No swinging."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Overhead press",3,"5",{lift:"ohp",pct:wd,note:"Glutes tight, no lean-back."}) ]},
+    {label:"Athletic superset · 3 rounds", items:[
+      ex("Cable woodchop (high→low)",3,"10/side",{load:"RPE 7",note:"Rotate from hips, arms long — downswing pattern."}),
+      ex("DB split squat",3,"8/side",{load:"RPE 7–8"}) ]}
+  ]};
+  if(d===3) return {title:"Day 3 · Barbell Row", sub:"30-minute session", blocks:[
+    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
+    {label:"Circuit · 3 rounds", hint:"no rest", items:[
+      ex("Scap pull-up",3,"8",{note:"Hang, shrug the blades. Sub: band pull-apart ×15."}),
+      ex("Pallof press",3,"10/side",{note:"Anti-rotation — pure golf transfer."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Barbell row",3,"8",{lift:"row",pct:rw,note:"Torso ~45°, no heaving."}) ]},
+    {label:"Athletic superset · 3 rounds", items:[
+      ex("Single-leg DB RDL",3,"8/side",{load:"RPE 7"}),
+      ex("Pull-ups",3,"AMRAP−1",{load:"BW"}) ]}
+  ]};
+  if(d===4){
+    const sumoWk = w%2===1, lift = sumoWk?"sumo":"dead", nm = sumoWk?"Sumo deadlift":"Deadlift";
+    return {title:"Day 4 · "+nm+" + Pull", sub:"Long session · back of body", blocks:[
+      {label:"Core + activation · 3 rounds", items:[
+        ex("Bird dog",3,"8/side"), ex("Glute bridge",3,"12",{note:"Hard squeeze at top."}),
+        ex("Suitcase carry",3,"30s/side",{load:"50 lb DB"}) ]},
+      {label:"Ramped warm-up", items:[
+        ex(nm+" — warm-up",1,"5",{lift,pct:.40}),
+        ex(nm+" — warm-up",1,"3",{lift,pct:.55}),
+        ex(nm+" — warm-up",1,"2",{lift,pct:.70,note:"Full setup, full brace."}) ]},
+      {label:"Main lift · heavy", items:[
+        ex(nm,ms,String(mr),{lift,pct:mp,note:WE_MAIN_NOTE[w]}) ]},
+      {label:"Superset A · "+a+" rounds", items:[
+        ex("Weighted pull-up / lat pulldown",a,"8",{load:"RPE 8"}),
+        ex("Cable pull-through",a,"12",{load:"RPE 7–8"}) ]},
+      {label:"Superset B · "+b+" rounds", items:[
+        ex("EZ-bar curl",b,"10",{load:"RPE 8"}),
+        ex("Standing calf raise",b,"15",{load:"RPE 8",note:"1-sec pause at top."}),
+        ex("DB shrug",b,"12",{load:"50 lb DBs",note:"2-sec hold at top."}) ]},
+      {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"—",{note:VO2[w][1]}) ]}
+    ]};
+  }
+  return {title:"Day 5 · Squat + Push", sub:"Long session · front of body", blocks:[
+    {label:"Core + activation · 3 rounds", items:[
+      ex("Pallof press",3,"10/side"),
+      ex("DB push press (explosive)",3,"5",{load:"25–35 lb",note:"Quiet power primer: fast dip, hard drive."}),
+      ex("Goblet squat",3,"8",{load:"25–35 lb"}) ]},
+    {label:"Ramped warm-up", items:[
+      ex("Squat — warm-up",1,"5",{lift:"squat",pct:.40}),
+      ex("Squat — warm-up",1,"3",{lift:"squat",pct:.55}),
+      ex("Squat — warm-up",1,"2",{lift:"squat",pct:.70,note:"Full setup, full brace."}) ]},
+    {label:"Main lift · heavy", items:[
+      ex("Back squat",ms,String(mr),{lift:"squat",pct:mp,note:WE_MAIN_NOTE[w]}) ]},
+    {label:"Superset A · "+a+" rounds", items:[
+      ex("Incline DB press",a,"8",{load:"RPE 8"}),
+      ex("DB lateral raise",a,"12",{load:"RPE 8"}) ]},
+    {label:"Superset B · "+b+" rounds", items:[
+      ex("Shoulder press machine",b,"10",{load:"RPE 8"}),
+      ex("Cable tricep pushdown",b,"12",{load:"RPE 8"}) ]},
+    {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"—",{note:VO2[w][1]+" Use the other machine from Day 4."}) ]}
+  ]};
+}
+
+/* ================= state + storage ================= */
+let state = {
+  week:0, day:0,   // day 0 = setup, 1..5 = training days
+  maxes:{bench:"",squat:"",dead:"",sumo:"",ohp:"",row8:"",inc:5},
+  checks:{}
+};
+let storageOK = true;
+
+async function loadState(){
+  try{
+    const r = await window.storage.get("golfplan:v1");
+    if(r && r.value){ const s = JSON.parse(r.value);
+      state = {...state, ...s, maxes:{...state.maxes, ...(s.maxes||{})}}; }
+  }catch(e){ /* first run or storage unavailable */ }
+  try{ await window.storage.set("golfplan:ping","1"); }
+  catch(e){ storageOK = false; }
+}
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{ await window.storage.set("golfplan:v1", JSON.stringify(
+      {week:state.week, day:state.day, maxes:state.maxes, checks:state.checks})); }
+    catch(e){ storageOK = false; }
+  }, 400);
+}
+
+/* ================= calc ================= */
+const num = v => { const n = parseFloat(v); return isFinite(n)&&n>0 ? n : null; };
+function oneRM(lift){
+  const m = state.maxes;
+  if(lift==="row"){ const w = num(m.row8); return w ? Math.round(w*(1+8/30)) : null; }
+  if(lift==="sumo"){ const s = num(m.sumo); if(s) return s;
+    const d = num(m.dead); return d ? Math.round(d*.925) : null; }
+  return num(m[lift]);
+}
+function wt(lift,pct){
+  const rm = oneRM(lift); if(!rm) return null;
+  const inc = num(state.maxes.inc) || 5;
+  return Math.round(rm*pct/inc)*inc;
+}
+
+/* ================= render ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  renderWeeks(); renderDays();
+  if(state.day===0) renderSetup(); else renderSession();
+  renderProgress();
+}
+function renderWeeks(){
+  $("weeks").innerHTML = [0,1,2,3,4,5].map(w=>
+    `<button class="wk ${w===state.week?"on":""} ${w===DELOAD?"deload":""}"
+      onclick="setWeek(${w})" aria-label="Week ${w+1}">W${w+1}</button>`).join("");
+}
+function renderDays(){
+  const names = ["Setup","D1 Bench","D2 OHP","D3 Row","D4 Pull","D5 Squat"];
+  $("days").innerHTML = names.map((n,i)=>
+    `<button class="day ${i===state.day?"on":""}" onclick="setDay(${i})">${n}</button>`).join("");
+}
+function key(d,b,i,s){ return `${state.week}-${d}-${b}-${i}-${s}`; }
+
+function renderSession(){
+  const def = dayDef(state.day, state.week);
+  let h = `<div class="session-title">${esc(def.title)}${state.week===DELOAD?'<span class="deload-tag">DELOAD</span>':""}</div>
+           <div class="session-sub">Week ${state.week+1} · ${esc(def.sub)}</div>`;
+  def.blocks.forEach((blk,bi)=>{
+    h += `<div class="block"><div class="eyebrow"><span>${esc(blk.label)}</span>${blk.hint?`<span class="hint">${esc(blk.hint)}</span>`:""}</div>`;
+    blk.items.forEach((it,ii)=>{
+      let load = "";
+      if(it.pct!=null){
+        const w = wt(it.lift,it.pct);
+        load = w ? `${w} <small>lb · ${(it.pct*100).toFixed(1).replace(/\.0$/,"")}%</small>`
+                 : `<small>set max in Setup</small>`;
+      } else if(it.load) load = `<small>${esc(it.load)}</small>`;
+      const plates = Array.from({length:it.sets>1||it.sets===1?it.sets:0},(_,si)=>{
+        const done = !!state.checks[key(state.day,bi,ii,si)];
+        return `<button class="plate ${done?"done":""}" aria-label="Set ${si+1}${done?" done":""}"
+                 onclick="toggle(${bi},${ii},${si})"></button>`;
+      }).join("");
+      h += `<div class="ex"><div class="ex-top"><span class="ex-name">${esc(it.name)}</span>
+            <span class="ex-load">${load}</span></div>
+            <div class="ex-scheme">${it.sets} × ${esc(it.reps)}</div>
+            ${it.note?`<div class="ex-note">${esc(it.note)}</div>`:""}
+            <div class="plates">${plates}</div></div>`;
+    });
+    h += `</div>`;
+  });
+  h += `<button class="btn" onclick="resetDay()">Clear check-offs for this day</button>`;
+  if(!storageOK) h += `<div class="storage-note">Heads-up: saved storage isn't available right now — check-offs will reset when you close this page.</div>`;
+  $("main").innerHTML = h;
+}
+
+function renderSetup(){
+  const m = state.maxes;
+  const fields = [
+    ["bench","Bench press 1RM",""],["squat","Back squat 1RM",""],
+    ["dead","Deadlift 1RM","conventional"],
+    ["sumo","Sumo deadlift 1RM","optional — blank = 92.5% of conventional"],
+    ["ohp","Overhead press 1RM",""],
+    ["row8","Barbell row · 8-rep weight","estimates a working max"],
+    ["inc","Rounding increment","5 lb default · 2.5 if you have small plates"]
+  ];
+  let h = `<div class="session-title">Setup</div>
+    <div class="setup"><p>Enter maxes once — every weight in the plan calculates from these and saves automatically.</p>`;
+  fields.forEach(([k,lab,sm])=>{
+    let der = "";
+    if(k==="sumo" && !num(m.sumo) && oneRM("sumo")) der = `<div class="derived">using ${oneRM("sumo")} lb</div>`;
+    if(k==="row8" && oneRM("row")) der = `<div class="derived">→ est. max ${oneRM("row")} lb</div>`;
+    h += `<div class="field"><label>${lab}${sm?`<small>${sm}</small>`:""}${der}</label>
+      <input inputmode="decimal" value="${esc(m[k]??"")}" onchange="setMax('${k}',this.value)"></div>`;
+  });
+  h += `<button class="btn danger" onclick="resetAll()">Reset all check-offs (start a new cycle)</button>`;
+  h += `<div class="eyebrow" style="margin-top:26px"><span>Backup &amp; restore</span><span class="hint">plain JSON</span></div>
+    <textarea id="io" class="io" placeholder="Export fills this box with your data as JSON (and copies it). Paste a backup here and hit Restore to load it." spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn" onclick="exportData()">Export data</button>
+      <button class="btn" onclick="importData()">Restore from JSON</button>
+    </div>`;
+  h += `<div class="storage-note">${storageOK
+    ? "Data saves on this device automatically."
+    : "Heads-up: saved storage isn't available right now — entries will reset when you close this page."}</div></div>`;
+  $("main").innerHTML = h;
+}
+
+function renderProgress(){
+  if(state.day===0){ $("prog").textContent = ""; return; }
+  const def = dayDef(state.day, state.week);
+  let tot=0, done=0;
+  def.blocks.forEach((blk,bi)=>blk.items.forEach((it,ii)=>{
+    for(let s=0;s<it.sets;s++){ tot++; if(state.checks[key(state.day,bi,ii,s)]) done++; }
+  }));
+  $("prog").innerHTML = `<b>${done}</b>/${tot} sets`;
+}
+
+/* ================= actions ================= */
+window.setWeek = w => { state.week=w; save(); render(); };
+window.setDay  = d => { state.day=d; save(); render(); window.scrollTo(0,0); };
+window.toggle  = (b,i,s) => {
+  const k = key(state.day,b,i,s);
+  if(state.checks[k]) delete state.checks[k]; else state.checks[k]=1;
+  save(); renderSession(); renderProgress();
+};
+window.setMax = (k,v) => { state.maxes[k]=v.trim(); save(); renderSetup(); };
+window.resetDay = () => {
+  const pre = `${state.week}-${state.day}-`;
+  Object.keys(state.checks).forEach(k=>{ if(k.startsWith(pre)) delete state.checks[k]; });
+  save(); render();
+};
+window.resetAll = () => {
+  if(!confirm("Clear every check-off across all 6 weeks? Maxes are kept.")) return;
+  state.checks = {}; save(); render();
+};
+window.exportData = () => {
+  const payload = JSON.stringify({v:1, exported:new Date().toISOString(),
+    maxes:state.maxes, checks:state.checks});
+  const ta = $("io"); ta.value = payload; ta.focus(); ta.select();
+  try{ navigator.clipboard.writeText(payload); }catch(e){}
+};
+window.importData = () => {
+  const ta = $("io");
+  if(!ta.value.trim()){ alert("Paste a backup into the box first."); return; }
+  try{
+    const s = JSON.parse(ta.value);
+    if(!s || (typeof s.maxes!=="object" && typeof s.checks!=="object"))
+      throw new Error("missing fields");
+    if(s.maxes) state.maxes = {...state.maxes, ...s.maxes};
+    if(s.checks && typeof s.checks==="object") state.checks = s.checks;
+    save(); render();
+  }catch(e){ alert("That doesn't look like a valid backup. Export creates the exact format this expects."); }
+};
+
+loadState().then(()=>{
+  if(!num(state.maxes.bench) && state.day!==0) state.day = 0;
+  render();
+});
+</script>
+</body>
+</html>
