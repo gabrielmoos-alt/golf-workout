@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Strength">
+<meta name="theme-color" content="#15181d">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Golf Strength · 6-Week Plan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -237,22 +240,38 @@ let state = {
 let storageOK = true;
 
 async function loadState(){
+  let raw = null;
   try{
-    const r = await window.storage.get("golfplan:v1");
-    if(r && r.value){ const s = JSON.parse(r.value);
-      state = {...state, ...s, maxes:{...state.maxes, ...(s.maxes||{})}}; }
-  }catch(e){ /* first run or storage unavailable */ }
-  try{ await window.storage.set("golfplan:ping","1"); }
-  catch(e){ storageOK = false; }
+    if(window.storage){ const r = await window.storage.get("golfplan:v1"); raw = r && r.value; }
+  }catch(e){ /* no saved data yet in artifact storage */ }
+  if(!raw){ try{ raw = localStorage.getItem("golfplan:v1"); }catch(e){} }
+  if(raw){
+    try{ const s = JSON.parse(raw);
+      state = {...state, ...s, maxes:{...state.maxes, ...(s.maxes||{})}}; }catch(e){}
+  }
+  storageOK = await writeState(true);
+}
+async function writeState(probe){
+  const payload = probe ? null : JSON.stringify(
+    {week:state.week, day:state.day, maxes:state.maxes, checks:state.checks});
+  let ok = false;
+  try{
+    if(window.storage){
+      await window.storage.set(probe ? "golfplan:ping" : "golfplan:v1", probe ? "1" : payload);
+      ok = true;
+    }
+  }catch(e){}
+  try{
+    if(probe){ localStorage.setItem("golfplan:ping","1"); }
+    else{ localStorage.setItem("golfplan:v1", payload); }
+    ok = true;
+  }catch(e){}
+  return ok;
 }
 let saveTimer = null;
 function save(){
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async ()=>{
-    try{ await window.storage.set("golfplan:v1", JSON.stringify(
-      {week:state.week, day:state.day, maxes:state.maxes, checks:state.checks})); }
-    catch(e){ storageOK = false; }
-  }, 400);
+  saveTimer = setTimeout(async ()=>{ storageOK = await writeState(false); }, 400);
 }
 
 /* ================= calc ================= */
