@@ -90,6 +90,15 @@
     .plate:active{transform:scale(.9)} .plate{transition:border-color .15s, background .15s, transform .08s}
   }
 
+  /* rest timer */
+  .timer{display:flex; align-items:center; gap:10px; margin-top:9px}
+  .t-disp{font-family:'IBM Plex Mono'; font-weight:600; font-size:19px;
+    color:var(--chalk-dim); min-width:58px}
+  .t-disp.running{color:var(--sand)}
+  .t-btn{border:1px solid var(--line); background:none; color:var(--chalk);
+    font-family:'Barlow Condensed'; font-weight:600; letter-spacing:.05em;
+    text-transform:uppercase; font-size:13px; padding:6px 14px; border-radius:6px; cursor:pointer}
+
   /* ---------- setup ---------- */
   .setup p{color:var(--chalk-dim); font-size:13.5px}
   .field{display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -153,88 +162,89 @@ const ex = (name, sets, reps, o={}) => ({name, sets, reps, ...o});
 function dayDef(d, w){
   const wd = WD_PCT[w], rw = ROW_PCT[w];
   const [ms, mr, mp] = WE_MAIN[w];
-  const a = w===DELOAD?3:4, b = w===DELOAD?2:3;   // weekend superset volumes
-  if(d===1) return {title:"Day 1 · Bench", sub:"30-minute session", blocks:[
-    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
-    {label:"Circuit · 3 rounds", hint:"no rest", items:[
-      ex("Cable face pull",3,"15",{note:"Light — primes upper back for pressing."}),
-      ex("Dead bug",3,"10/side",{note:"Slow. Ribs down, low back glued to floor."}) ]},
-    {label:"Main lift", hint:"~12 min", items:[
-      ex("Bench press",3,"5",{lift:"bench",pct:wd,note:"1 empty-bar + 1 light set first."}) ]},
-    {label:"Athletic superset · 3 rounds", items:[
-      ex("Med ball rotational throw",3,"8/side",{load:"10–12 lb",note:"Too loud? Sub explosive cable rotation."}),
-      ex("Single-arm DB row",3,"10/side",{load:"RPE 7–8"}) ]}
-  ]};
-  if(d===2) return {title:"Day 2 · Overhead Press", sub:"30-minute session", blocks:[
-    {label:"VO2 sprinkle", hint:"~5 min", items:[
-      ex("30s hard / 30s easy intervals",1,"5 min",{note:"After 1 easy min, alternate 30/30 at 8/10 effort."}) ]},
-    {label:"Circuit · 3 rounds", hint:"no rest", items:[
-      ex("Cable external rotation",3,"12/side",{note:"Light — cuff prep."}),
-      ex("Hanging knee raise",3,"10",{note:"No swinging."}) ]},
-    {label:"Main lift", hint:"~12 min", items:[
-      ex("Overhead press",3,"5",{lift:"ohp",pct:wd,note:"Glutes tight, no lean-back."}) ]},
-    {label:"Athletic superset · 3 rounds", items:[
-      ex("Cable woodchop (high→low)",3,"10/side",{load:"RPE 7",note:"Rotate from hips, arms long — downswing pattern."}),
-      ex("DB split squat",3,"8/side",{load:"RPE 7–8"}) ]}
-  ]};
-  if(d===3) return {title:"Day 3 · Barbell Row", sub:"30-minute session", blocks:[
-    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
-    {label:"Circuit · 3 rounds", hint:"no rest", items:[
-      ex("Scap pull-up",3,"8",{note:"Hang, shrug the blades. Sub: band pull-apart ×15."}),
-      ex("Pallof press",3,"10/side",{note:"Anti-rotation — pure golf transfer."}) ]},
-    {label:"Main lift", hint:"~12 min", items:[
-      ex("Barbell row",3,"8",{lift:"row",pct:rw,note:"Torso ~45°, no heaving."}) ]},
-    {label:"Athletic superset · 3 rounds", items:[
-      ex("Single-leg DB RDL",3,"8/side",{load:"RPE 7"}),
-      ex("Pull-ups",3,"AMRAP−1",{load:"BW"}) ]}
-  ]};
-  if(d===4){
+  const a = w===DELOAD?3:4, b = w===DELOAD?2:3;   // long-day superset volumes
+  if(d===1){
     const sumoWk = w%2===1, lift = sumoWk?"sumo":"dead", nm = sumoWk?"Sumo deadlift":"Deadlift";
-    return {title:"Day 4 · "+nm+" + Pull", sub:"Long session · back of body", blocks:[
-      {label:"Core + activation · 3 rounds", items:[
-        ex("Bird dog",3,"8/side"), ex("Glute bridge",3,"12",{note:"Hard squeeze at top."}),
-        ex("Suitcase carry",3,"30s/side",{load:"50 lb DB"}) ]},
+    return {title:"Day 1 \u00b7 "+nm+" + Pull", sub:"Long session \u00b7 back of body", blocks:[
+      {label:"Core + activation \u00b7 3 rounds", items:[
+        ex("Bird dog",3,"8/side",{note:"McGill Big 3. Slow and braced, no wobble."}),
+        ex("Glute bridge",3,"12",{note:"Hard squeeze at the top."}),
+        ex("Suitcase carry",3,"30s/side",{load:"50 lb DB",note:"SquatU's #1 core pick \u2014 walk tall, don't lean."}) ]},
       {label:"Ramped warm-up", items:[
-        ex(nm+" — warm-up",1,"5",{lift,pct:.40}),
-        ex(nm+" — warm-up",1,"3",{lift,pct:.55}),
-        ex(nm+" — warm-up",1,"2",{lift,pct:.70,note:"Full setup, full brace."}) ]},
-      {label:"Main lift · heavy", items:[
-        ex(nm,ms,String(mr),{lift,pct:mp,note:WE_MAIN_NOTE[w]}) ]},
-      {label:"Superset A · "+a+" rounds", items:[
-        ex("Weighted pull-up / lat pulldown",a,"8",{load:"RPE 8"}),
-        ex("Cable pull-through",a,"12",{load:"RPE 7–8"}) ]},
-      {label:"Superset B · "+b+" rounds", items:[
-        ex("EZ-bar curl",b,"10",{load:"RPE 8"}),
-        ex("Standing calf raise",b,"15",{load:"RPE 8",note:"1-sec pause at top."}),
-        ex("DB shrug",b,"12",{load:"50 lb DBs",note:"2-sec hold at top."}) ]},
-      {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"—",{note:VO2[w][1]}) ]}
+        ex(nm+" \u2014 warm-up",1,"5",{lift,pct:.40}),
+        ex(nm+" \u2014 warm-up",1,"3",{lift,pct:.55}),
+        ex(nm+" \u2014 warm-up",1,"2",{lift,pct:.70,note:"Full setup, full brace."}) ]},
+      {label:"Main lift \u00b7 heavy", items:[
+        ex(nm,ms,String(mr),{lift,pct:mp,note:WE_MAIN_NOTE[w],timer:1}) ]},
+      {label:"Superset A \u00b7 "+a+" rounds", items:[
+        ex("Weighted pull-up / lat pulldown",a,"8",{load:"RPE 8",note:"Nippard S-tier \u2014 full stretch at the top."}),
+        ex("Barbell RDL",a,"8",{lift:"dead",pct:.50,note:"Replaces pull-throughs. Nippard top-5 overall; add 5\u201310 lb weekly while form is crisp."}) ]},
+      {label:"Superset B \u00b7 "+b+" rounds", items:[
+        ex("EZ-bar curl",b,"10",{load:"RPE 8",note:"Emphasize the stretch at the bottom."}),
+        ex("Standing calf raise",b,"15",{load:"RPE 8",note:"2-sec pause in the bottom stretch \u2014 that's where growth happens."}),
+        ex("Barbell shrug",b,"12",{lift:"dead",pct:.55,note:"Swapped from DBs \u2014 the 50s were too light for you. 2-sec hold at top."}) ]},
+      {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"\u2014",{note:VO2[w][1]}) ]}
     ]};
   }
-  return {title:"Day 5 · Squat + Push", sub:"Long session · front of body", blocks:[
-    {label:"Core + activation · 3 rounds", items:[
-      ex("Pallof press",3,"10/side"),
-      ex("DB push press (explosive)",3,"5",{load:"25–35 lb",note:"Quiet power primer: fast dip, hard drive."}),
-      ex("Goblet squat",3,"8",{load:"25–35 lb"}) ]},
+  if(d===2) return {title:"Day 2 \u00b7 Squat + Push", sub:"Long session \u00b7 front of body", blocks:[
+    {label:"Core + activation \u00b7 3 rounds", items:[
+      ex("Side plank",3,"30s/side",{note:"McGill Big 3 \u2014 lateral core, big for swing stability."}),
+      ex("DB push press (explosive)",3,"5",{load:"25\u201335 lb",note:"Quiet power primer: fast dip, hard drive."}),
+      ex("Goblet squat",3,"8",{load:"25\u201335 lb",note:"SquatU squat prep \u2014 grooves depth, upright torso."}) ]},
     {label:"Ramped warm-up", items:[
-      ex("Squat — warm-up",1,"5",{lift:"squat",pct:.40}),
-      ex("Squat — warm-up",1,"3",{lift:"squat",pct:.55}),
-      ex("Squat — warm-up",1,"2",{lift:"squat",pct:.70,note:"Full setup, full brace."}) ]},
-    {label:"Main lift · heavy", items:[
-      ex("Back squat",ms,String(mr),{lift:"squat",pct:mp,note:WE_MAIN_NOTE[w]}) ]},
-    {label:"Superset A · "+a+" rounds", items:[
-      ex("Incline DB press",a,"8",{load:"RPE 8"}),
-      ex("DB lateral raise",a,"12",{load:"RPE 8"}) ]},
-    {label:"Superset B · "+b+" rounds", items:[
-      ex("Shoulder press machine",b,"10",{load:"RPE 8"}),
-      ex("Cable tricep pushdown",b,"12",{load:"RPE 8"}) ]},
-    {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"—",{note:VO2[w][1]+" Use the other machine from Day 4."}) ]}
+      ex("Squat \u2014 warm-up",1,"5",{lift:"squat",pct:.40}),
+      ex("Squat \u2014 warm-up",1,"3",{lift:"squat",pct:.55}),
+      ex("Squat \u2014 warm-up",1,"2",{lift:"squat",pct:.70,note:"Full setup, full brace."}) ]},
+    {label:"Main lift \u00b7 heavy", items:[
+      ex("Back squat",ms,String(mr),{lift:"squat",pct:mp,note:WE_MAIN_NOTE[w],timer:1}) ]},
+    {label:"Superset A \u00b7 "+a+" rounds", items:[
+      ex("Incline DB press",a,"8",{load:"3-sec lowering",note:"Nippard's #3 lift overall. 50s are near your cap \u2014 slow negatives + a pause keep them honest. Sub: chest press machine."}),
+      ex("Cable lateral raise",a,"12",{load:"RPE 8",note:"Nippard's #1 side-delt pick \u2014 tension in the stretch, unlike DBs."}) ]},
+    {label:"Superset B \u00b7 "+b+" rounds", items:[
+      ex("Shoulder press machine",b,"10",{load:"RPE 8",note:"Nippard's favorite delt press \u2014 deep stretch, zero balance tax."}),
+      ex("Overhead cable triceps extension",b,"12",{load:"RPE 8",note:"Beats pushdowns for the long head \u2014 the overhead stretch drives more growth."}) ]},
+    {label:"VO2 finisher", items:[ ex(VO2[w][0],1,"\u2014",{note:VO2[w][1]+" Use the other machine from Day 1."}) ]}
+  ]};
+  if(d===3) return {title:"Day 3 \u00b7 Bench", sub:"30-minute session", blocks:[
+    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
+    {label:"Circuit \u00b7 3 rounds", hint:"no rest", items:[
+      ex("Cable face pull",3,"15",{note:"Nippard S-tier \u2014 primes upper back for pressing."}),
+      ex("Dead bug",3,"10/side",{note:"Slow. Ribs down, low back glued to floor."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Bench press",3,"5",{lift:"bench",pct:wd,note:"1 empty-bar + 1 light set first.",timer:1}) ]},
+    {label:"Athletic superset \u00b7 3 rounds", items:[
+      ex("Med ball rotational throw",3,"8/side",{load:"10\u201312 lb",note:"Too loud? Sub explosive cable rotation."}),
+      ex("Half-kneeling 1-arm lat pulldown",3,"10/side",{load:"RPE 8",note:"Nippard S-tier. Replaces DB rows \u2014 the stack loads past your 50s, and half-kneeling adds anti-rotation."}) ]}
+  ]};
+  if(d===4) return {title:"Day 4 \u00b7 Overhead Press", sub:"30-minute session", blocks:[
+    {label:"VO2 sprinkle", hint:"~5 min", items:[
+      ex("30s hard / 30s easy intervals",1,"5 min",{note:"After 1 easy min, alternate 30/30 at 8/10 effort."}) ]},
+    {label:"Circuit \u00b7 3 rounds", hint:"no rest", items:[
+      ex("Cable external rotation",3,"12/side",{note:"Light \u2014 cuff prep."}),
+      ex("Hanging knee raise",3,"10",{note:"No swinging."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Overhead press",3,"5",{lift:"ohp",pct:wd,note:"Glutes tight, no lean-back.",timer:1}) ]},
+    {label:"Athletic superset \u00b7 3 rounds", items:[
+      ex("Cable woodchop (high\u2192low)",3,"10/side",{load:"RPE 7",note:"Rotate from hips, arms long \u2014 downswing pattern."}),
+      ex("DB Bulgarian split squat",3,"8/side",{load:"up to 50s",note:"Rear foot LOW on the bench \u2014 SquatU cue: too high overarches the back. More load per leg under your DB cap."}) ]}
+  ]};
+  return {title:"Day 5 \u00b7 Barbell Row", sub:"30-minute session", blocks:[
+    {label:"Cardio warm-up", hint:"~5 min", items:[ ex("Easy run or spin",1,"5 min") ]},
+    {label:"Circuit \u00b7 3 rounds", hint:"no rest", items:[
+      ex("Scap pull-up",3,"8",{note:"Hang, shrug the blades. Sub: band pull-apart \u00d715."}),
+      ex("Pallof press",3,"10/side",{note:"Anti-rotation \u2014 pure golf transfer."}) ]},
+    {label:"Main lift", hint:"~12 min", items:[
+      ex("Barbell row",3,"8",{lift:"row",pct:rw,note:"Kept as a strength lift \u2014 Nippard grades it mid for pure size, but your pulldowns and pull-ups cover that.",timer:1}) ]},
+    {label:"Athletic superset \u00b7 3 rounds", items:[
+      ex("Single-leg DB RDL",3,"8/side",{load:"RPE 7",note:"SquatU staple \u2014 balance + posterior chain for swing stability."}),
+      ex("Pull-ups",3,"AMRAP\u22121",{load:"BW",note:"S-tier. Stop one rep shy of failure."}) ]}
   ]};
 }
 
 /* ================= state + storage ================= */
 let state = {
   week:0, day:0,   // day 0 = setup, 1..5 = training days
-  maxes:{bench:"",squat:"",dead:"",sumo:"",ohp:"",row8:"",inc:5},
+  maxes:{bench:"215",squat:"295",dead:"295",sumo:"315",ohp:"125",row8:"135",inc:5},
   checks:{}
 };
 let storageOK = true;
@@ -242,9 +252,9 @@ let storageOK = true;
 async function loadState(){
   let raw = null;
   try{
-    if(window.storage){ const r = await window.storage.get("golfplan:v1"); raw = r && r.value; }
+    if(window.storage){ const r = await window.storage.get("golfplan:v2"); raw = r && r.value; }
   }catch(e){ /* no saved data yet in artifact storage */ }
-  if(!raw){ try{ raw = localStorage.getItem("golfplan:v1"); }catch(e){} }
+  if(!raw){ try{ raw = localStorage.getItem("golfplan:v2"); }catch(e){} }
   if(raw){
     try{ const s = JSON.parse(raw);
       state = {...state, ...s, maxes:{...state.maxes, ...(s.maxes||{})}}; }catch(e){}
@@ -257,13 +267,13 @@ async function writeState(probe){
   let ok = false;
   try{
     if(window.storage){
-      await window.storage.set(probe ? "golfplan:ping" : "golfplan:v1", probe ? "1" : payload);
+      await window.storage.set(probe ? "golfplan:ping" : "golfplan:v2", probe ? "1" : payload);
       ok = true;
     }
   }catch(e){}
   try{
     if(probe){ localStorage.setItem("golfplan:ping","1"); }
-    else{ localStorage.setItem("golfplan:v1", payload); }
+    else{ localStorage.setItem("golfplan:v2", payload); }
     ok = true;
   }catch(e){}
   return ok;
@@ -304,7 +314,7 @@ function renderWeeks(){
       onclick="setWeek(${w})" aria-label="Week ${w+1}">W${w+1}</button>`).join("");
 }
 function renderDays(){
-  const names = ["Setup","D1 Bench","D2 OHP","D3 Row","D4 Pull","D5 Squat"];
+  const names = ["Setup","D1 Pull","D2 Squat","D3 Bench","D4 OHP","D5 Row"];
   $("days").innerHTML = names.map((n,i)=>
     `<button class="day ${i===state.day?"on":""}" onclick="setDay(${i})">${n}</button>`).join("");
 }
@@ -328,11 +338,20 @@ function renderSession(){
         return `<button class="plate ${done?"done":""}" aria-label="Set ${si+1}${done?" done":""}"
                  onclick="toggle(${bi},${ii},${si})"></button>`;
       }).join("");
+      let timerHtml = "";
+      if(it.timer){
+        const tid = `${state.day}-${bi}-${ii}`;
+        const t = TIMERS[tid], running = !!(t && t.startTs);
+        const el = t ? t.acc + (running ? (Date.now()-t.startTs)/1000 : 0) : 0;
+        timerHtml = `<div class="timer"><span class="t-disp${running?" running":""}" id="td-${tid}">${tfmt(el)}</span>` +
+          `<button class="t-btn" id="tb-${tid}" onclick="timerToggle('${tid}')">${running?"Stop":"Start"}</button>` +
+          `<button class="t-btn" onclick="timerReset('${tid}')">Reset</button></div>`;
+      }
       h += `<div class="ex"><div class="ex-top"><span class="ex-name">${esc(it.name)}</span>
             <span class="ex-load">${load}</span></div>
             <div class="ex-scheme">${it.sets} × ${esc(it.reps)}</div>
             ${it.note?`<div class="ex-note">${esc(it.note)}</div>`:""}
-            <div class="plates">${plates}</div></div>`;
+            <div class="plates">${plates}</div>${timerHtml}</div>`;
     });
     h += `</div>`;
   });
@@ -419,6 +438,28 @@ window.importData = () => {
     save(); render();
   }catch(e){ alert("That doesn't look like a valid backup. Export creates the exact format this expects."); }
 };
+
+/* ================= rest timer ================= */
+const TIMERS = {};
+const tfmt = sec => Math.floor(sec/60) + ":" + String(Math.floor(sec%60)).padStart(2,"0");
+function tState(id){ if(!TIMERS[id]) TIMERS[id] = {acc:0, startTs:null}; return TIMERS[id]; }
+function tElapsed(t){ return t.acc + (t.startTs ? (Date.now()-t.startTs)/1000 : 0); }
+function syncTimer(id){
+  const d = document.getElementById("td-"+id), b = document.getElementById("tb-"+id);
+  if(!d) return;
+  const t = tState(id);
+  d.textContent = tfmt(tElapsed(t));
+  d.classList.toggle("running", !!t.startTs);
+  if(b) b.textContent = t.startTs ? "Stop" : "Start";
+}
+window.timerToggle = id => {
+  const t = tState(id);
+  if(t.startTs){ t.acc = tElapsed(t); t.startTs = null; }
+  else{ t.startTs = Date.now(); }
+  syncTimer(id);
+};
+window.timerReset = id => { const t = tState(id); t.acc = 0; t.startTs = null; syncTimer(id); };
+setInterval(()=>{ for(const id in TIMERS){ if(TIMERS[id].startTs) syncTimer(id); } }, 500);
 
 loadState().then(()=>{
   if(!num(state.maxes.bench) && state.day!==0) state.day = 0;
