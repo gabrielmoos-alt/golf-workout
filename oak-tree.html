@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oak Tree">
+<meta name="theme-color" content="#15181d">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Oak Tree · 20 days</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --iron:#15181d; --iron2:#1d2129; --line:#2b303b;
+    --chalk:#ece7dc; --chalk-dim:#9aa0ab;
+    --fairway:#5fa06a; --fairway-deep:#3c7a49;
+    --sand:#c9a96a; --danger:#c0704f;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; background:var(--iron); color:var(--chalk);
+    font-family:'Inter',-apple-system,sans-serif; font-size:15px; line-height:1.4}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  button{font:inherit}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--sand); outline-offset:2px}
+
+  header{position:sticky; top:0; z-index:10; background:var(--iron);
+    border-bottom:1px solid var(--line); padding:calc(10px + env(safe-area-inset-top)) 16px 0}
+  .brand{display:flex; align-items:baseline; justify-content:space-between}
+  .brand h1{font-family:'Barlow Condensed'; font-weight:700; font-size:21px; letter-spacing:.05em; margin:0}
+  .day-progress{font-family:'IBM Plex Mono'; font-size:12px; color:var(--chalk-dim)}
+  .day-progress b{color:var(--fairway)}
+  .weeks{display:flex; gap:6px; margin:10px 0}
+  .wk{flex:1; border:1px solid var(--line); background:none; color:var(--chalk-dim);
+    font-family:'Barlow Condensed'; font-weight:600; font-size:15px; padding:6px 0; border-radius:6px; cursor:pointer}
+  .wk.on{background:var(--sand); border-color:var(--sand); color:#1a1a14}
+  .days{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; scrollbar-width:none}
+  .days::-webkit-scrollbar{display:none}
+  .day{white-space:nowrap; border:1px solid var(--line); background:none; color:var(--chalk-dim);
+    font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.03em;
+    padding:7px 13px; border-radius:6px; cursor:pointer}
+  .day.on{background:var(--iron2); border-color:var(--fairway); color:var(--chalk)}
+  .day .tick{color:var(--fairway); margin-left:4px}
+
+  main{padding:14px 16px 48px; max-width:640px; margin:0 auto}
+  .session-title{font-family:'Barlow Condensed'; font-weight:700; font-size:28px; letter-spacing:.03em; margin:2px 0 0}
+  .session-sub{color:var(--chalk-dim); font-size:13px; margin:2px 0 16px}
+
+  .block{margin-bottom:20px}
+  .eyebrow{font-family:'Barlow Condensed'; font-weight:600; font-size:16px; letter-spacing:.03em;
+    color:var(--sand); border-bottom:1px solid var(--line); padding-bottom:5px; margin-bottom:2px;
+    display:flex; justify-content:space-between; align-items:baseline}
+  .eyebrow .hint{font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--chalk-dim); font-weight:500}
+  .ss-wrap{border-left:2px solid var(--sand); padding-left:10px; margin-top:6px}
+
+  .wu{display:flex; justify-content:space-between; padding:6px 0; font-size:14px}
+  .mono{font-family:'IBM Plex Mono'; font-size:12.5px; color:var(--chalk-dim)}
+  .rounds{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
+  .rnd{border:1px solid var(--line); background:var(--iron2); color:var(--chalk-dim); border-radius:6px;
+    padding:7px 12px; font-family:'Barlow Condensed'; font-weight:600; font-size:14px; cursor:pointer}
+  .rnd.done{background:var(--fairway); border-color:var(--fairway); color:#0f1a12}
+
+  .ex{padding:11px 0; border-bottom:1px solid var(--line)}
+  .ex:last-child{border-bottom:none}
+  .ex-top{display:flex; gap:8px; align-items:baseline}
+  .ex-tag{font-family:'IBM Plex Mono'; font-size:12px; color:var(--sand); min-width:20px}
+  .ex-name{font-weight:600; font-size:15px}
+  .prev{font-family:'IBM Plex Mono'; font-size:12px; color:var(--fairway); margin-top:3px}
+  .ex-note{font-size:12.5px; color:var(--chalk-dim); margin-top:3px}
+
+  .sets{display:flex; flex-wrap:wrap; gap:8px; margin-top:9px}
+  .set{width:76px; border:1px solid var(--line); border-radius:8px; padding:5px 5px 6px;
+    display:flex; flex-direction:column; align-items:center; gap:5px; background:var(--iron2)}
+  .set.done{border-color:var(--fairway)}
+  .set .lab{font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--chalk-dim); white-space:nowrap}
+  .set input{width:100%; background:var(--iron); border:1px solid var(--line); border-radius:6px;
+    color:var(--chalk); font-family:'IBM Plex Mono'; font-weight:600; font-size:16px; text-align:center; padding:5px 2px}
+  .set input::placeholder{color:#636a76}
+  .set input:focus{border-color:var(--sand); outline:none}
+  .chk{width:100%; height:28px; border-radius:6px; border:1px solid var(--line); background:none;
+    color:var(--chalk-dim); font-size:14px; cursor:pointer}
+  .set.done .chk{background:var(--fairway); border-color:var(--fairway); color:#0f1a12}
+
+  .eq{width:40px; border:1px dashed var(--line); border-radius:8px; background:none; color:var(--sand);
+    font-family:'IBM Plex Mono'; font-weight:600; font-size:22px; cursor:pointer}
+  .eq:active{border-color:var(--sand)}
+
+  .timer{display:flex; align-items:center; gap:10px; margin-top:10px}
+  .t-disp{font-family:'IBM Plex Mono'; font-weight:600; font-size:20px; color:var(--chalk-dim); min-width:60px}
+  .t-disp.running{color:var(--sand)}
+  .t-disp.ready{color:var(--fairway)}
+  .t-btn{border:1px solid var(--line); background:none; color:var(--chalk); font-family:'Barlow Condensed';
+    font-weight:600; letter-spacing:.04em; font-size:14px; padding:6px 14px; border-radius:6px; cursor:pointer}
+
+  .setup p{color:var(--chalk-dim); font-size:13.5px}
+  .field{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line)}
+  .field label{font-weight:600; font-size:14.5px}
+  .field label small{display:block; font-weight:400; font-size:12px; color:var(--chalk-dim)}
+  .field input{width:96px; background:var(--iron2); border:1px solid var(--line); border-radius:8px; color:var(--chalk);
+    font-family:'IBM Plex Mono'; font-weight:600; font-size:17px; text-align:center; padding:9px 6px}
+  .btn{width:100%; margin-top:14px; padding:12px; border-radius:8px; border:1px solid var(--line); background:none;
+    color:var(--chalk-dim); font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.04em; cursor:pointer}
+  .btn.danger{border-color:var(--danger); color:var(--danger)}
+  .btnrow{display:flex; gap:10px}
+  .io{width:100%; min-height:88px; background:var(--iron2); border:1px solid var(--line); border-radius:8px; color:var(--chalk);
+    font-family:'IBM Plex Mono'; font-size:11px; padding:8px; margin-top:10px; resize:vertical}
+  .storage-note{font-size:11.5px; color:var(--chalk-dim); margin-top:14px; text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>Oak Tree</h1><div class="day-progress" id="prog"></div></div>
+  <div class="weeks" id="weeks"></div>
+  <div class="days" id="days"></div>
+</header>
+<main id="main"></main>
+
+<script>
+/*DATA-START*/
+const S = (r, ...ps) => ps.map(p => ({r, p:p/100}));      // r reps at each listed %
+const M = (p, ...rs) => rs.map(r => ({r, p:p/100}));      // each listed rep count at one %
+const R = (...rs) => rs.map(r => ({r}));                  // plain rep sets
+const E = (id, name, sets, o={}) => ({id, name, sets, ...o});
+const A = [150,180], B = [120,150];                       // rest windows in seconds
+
+const DAYS = [
+ /* 1 */ {rest:A, warm:{rounds:3, hint:"2-3 rounds", items:[["Empty bar RDLs","10"],["Pushups","5"],["Empty bar squats","5"]]},
+  blocks:[
+   {ss:1, items:[E("deadlift","Deadlift",S(5,60,65,70,70)), E("facepull","Band or cable face pulls",R(15,15,15,15),{note:"Sheet note: 42.5-50"})]},
+   {items:[E("bench","Bench press",[...S(5,60,65,70),...S(3,75,80,85),...S(5,65,70,75)])]},
+   {items:[E("skull","EZ or straight bar skull crushers",R(10,10,10,10,10),{note:"Sheet note: just be consistent"})]}],
+  cardio:{ss:1, items:[E("rearlat","Band pull-aparts or DB rear laterals",R(20,20,20)), E("dbshrug","DB shrugs",R(20,20,20))]}},
+ /* 2 */ {rest:A, warm:{rounds:3, items:[["Empty bar squats","10"],["Empty bar bent over rows","10"]]},
+  blocks:[
+   {ss:1, items:[E("squat","Back squat",[{r:10,p:.5},{r:8,p:.6},{r:6,p:.7},{r:4,p:.75},{r:2,p:.8}]), E("pullover","DB pullover",R(5,5,5,8,8),{note:"Sheet note: 50-60, make sure to feel a good stretch"})]},
+   {ss:1, items:[E("dbrdl","DB RDLs",R(10,10,10,10),{note:"Sheet note: 80-100"}), E("chin","Weighted chin-ups",R(3,3,3,3),{note:"Sheet note: 35? Increase 2.5 if necessary"})]},
+   {items:[E("csrow","Chest supported 2-arm DB rows",R(15,15,15),{note:"Sheet note: T-bar row instead, pick a weight you can move through full range of motion"})]}],
+  cardio:{ss:1, items:[E("altcurl","Heavy alternating DB curls",R(5,5,5,5),{note:"Sheet note: 35 probably lol"}), E("bbshrug","Barbell shrugs",R(10,10,10,10),{note:"Sheet note: machine with 2 45s and change"})]}},
+ /* 3 */ {rest:A, warm:{rounds:4, hint:"3-4 rounds", items:[["Empty bar overhead press","10"],["Lat stretches",""]]},
+  blocks:[
+   {items:[E("ohp","Standing barbell overhead press",[6,7,8,9,10].map(r=>({r,p:.31})),{note:"Start at 30-32% of bench max and hold that weight as reps climb. Sheet note: 100"})]},
+   {label:"Big 33s", ss:1, items:[E("lateral","DB laterals",R(11,11,11)), E("rearlat","DB rear laterals",R(11,11,11),{note:"Sheet note: 15"}), E("upright","DB upright rows",R(11,11,11))]},
+   {items:[E("ohext","Rope or band overhead extensions",R(25,25,25,25,25))]}],
+  cardio:{items:[E("kickback","DB triceps kickbacks",R(10,10,10))]}},
+ /* 4 */ {rest:A, warm:{rounds:3, items:[["Empty bar RDLs","5"],["Empty bar bent over rows","10"]]},
+  blocks:[
+   {items:[E("deadlift","Deadlift",[...S(5,60,70),...S(3,75,80,85),...S(5,75,75)])]},
+   {items:[E("onearm","1-arm DB row",R(5,5,5,5),{note:"Sheet note: 70-90"})]},
+   {items:[E("snatch","Snatch grip deadlift",S(5,45,45,45),{note:"% of deadlift max. Sheet note: 185"})]}],
+  cardio:{ss:1, items:[E("facepull","Rope or band face pulls",R(15,15,15),{note:"Sheet note: 50"}), E("widecurl","Wide grip barbell curls",R(15,15,15),{note:"Sheet note: 50"})]}},
+ /* 5 */ {warm:{rounds:3, items:[["Empty bar squats","10"],["Empty bar bench press","20"]]},
+  blocks:[
+   {rest:[150,150], items:[E("squat","Back squat",S(5,60,65,70,70))]},
+   {rest:[180,180], items:[E("bench","Bench press",[...S(6,62,65,67),...S(8,60,62,65),...S(10,60,60,60)])]},
+   {items:[E("dip","Bench dips",R(10,10,10,10),{note:"Weighted if possible. Sheet note: any"})]}],
+  cardio:{ss:1, items:[E("rearlat","DB rear laterals",R(20,20,20),{note:"Sheet note: 15"}), E("cgpush","Close grip pushups",R(10,10,10))]}},
+ /* 6 */ {rest:B, warm:{rounds:1, items:[["Lots of lat stretches",""]]},
+  blocks:[
+   {items:[E("pullup","Pull-ups",R(4,4,4,4),{note:"Weighted if possible. Slow and strict."})]},
+   {items:[E("pullover","DB pullover",R(5,5,5,5))]},
+   {ss:1, items:[E("invrow","Bodyweight inverted row",R(10,10,10)), E("csrow","Chest supported 2-arm DB rows",R(10,10,10))]}],
+  cardio:{ss:1, items:[E("hammer","DB hammer curls",R(20,20,20)), E("dbshrug","DB shrugs",R(20,20,20))]}},
+ /* 7 */ {rest:A, warm:{rounds:3, items:[["Empty bar RDLs","5"],["Pushups","5"]]},
+  blocks:[
+   {ss:1, items:[E("deadlift","Deadlift",S(3,60,65,70,70,70)), E("dbshrug","DB shrugs",R(10,10,10,10,10))]},
+   {items:[E("bench","Bench press",S(5,60,65,70,75))]},
+   {ss:1, items:[E("skull","EZ or straight bar skull crushers",R(10,10,10)), E("dip","Bench dips",R(10,10,10))]}],
+  cardio:{items:[E("kickback","DB triceps kickbacks",R(15,15,15))]}},
+ /* 8 */ {rest:A, warm:{rounds:3, items:[["Empty bar squats","10"],["Empty bar bent over rows","10"]]},
+  blocks:[
+   {items:[E("front","Front squat",S(5,50,52,55),{note:"% of back squat max."})]},
+   {items:[E("bbrow","Barbell bent over rows",R(10,5,5,5,10))]},
+   {items:[E("chin","Weighted chin-ups",R(3,3,3,3))]},
+   {items:[E("bbcurl","Heavy barbell curls",R(5,5,5,5))]}],
+  cardio:{items:[E("conccurl","DB concentration curls",R(15,15,15))]}},
+ /* 9 */ {rest:B, warm:{rounds:3, items:[["Empty bar overhead press","10"],["Shoulder and lat stretches",""]]},
+  blocks:[
+   {items:[E("ohp","Standing barbell overhead press",[{r:5,p:.35},{r:5,p:.375},{r:5,p:.4},{r:5,p:.4}],{note:"% of bench max."})]},
+   {label:"Big 44s", ss:1, items:[E("frontraise","DB front raises",R(11,11,11)), E("lateral","DB laterals",R(11,11,11)), E("rearlat","DB rear laterals",R(11,11,11)), E("curlpress","DB curl to overhead press",R(11,11,11))]},
+   {items:[E("pushdown","Rope or band triceps pushdowns",R(10,10,10,25,25))]}],
+  cardio:{ss:1, items:[E("dbshrug","DB shrugs",R(20,20,20)), E("kickback","DB triceps kickbacks",R(10,10,10))]}},
+ /* 10 */ {rest:B, warm:{rounds:3, items:[["Empty bar RDLs","10"],["Lat stretches",""]]},
+  blocks:[
+   {ss:1, items:[E("sumo","Sumo deadlift",S(5,60,65,70)), E("pullover","DB pullovers",R(5,5,5))]},
+   {ss:1, items:[E("csrow","Chest supported 2-arm DB rows",R(10,10,10)), E("dbrdl","DB RDLs",R(10,10,10))]},
+   {items:[E("chin","Weighted chin-ups",R(3,3,3))]},
+   {items:[E("bb21","Barbell 21s (7/7/7)",R(21,21,21))]}],
+  cardio:{items:[E("bbshrug","Barbell shrugs",R(10,10,10,10))]}},
+ /* 11 */ {tag:"Huge day, get ready", rest:A, warm:{rounds:3, items:[["Empty bar squats","10"],["Empty bar bench press","20"]]},
+  blocks:[
+   {items:[E("squat","Back squat",[...M(70,3,4,5),...M(80,2,3,4),...M(90,1,1,1)])]},
+   {items:[E("bench","Bench press",[...M(70,4,5,6),...M(80,3,4,5),...M(90,1,1,1)])]}],
+  cardio:{ss:1, items:[E("dbshrug","DB shrugs",R(10,10,10)), E("dip","Bench dips",R(10,10,10))]}},
+ /* 12 */ {rest:B, warm:{rounds:1, items:[["Lat stretches, take your time",""]]},
+  blocks:[
+   {items:[E("bbrow","Barbell bent over rows",R(10,10,10))]},
+   {ss:1, items:[E("pullover","DB pullovers",R(5,8,10,12)), E("rearlat","DB rear laterals",R(15,15,15,15))]},
+   {items:[E("bbcurl","Heavy barbell curls",R(5,5,5,5))]},
+   {items:[E("hammer","DB hammer curls",R(20,20,20))]}],
+  cardio:null, cardioNote:"Day off from cardio."},
+ /* 13 */ {rest:A, warm:{rounds:3, items:[["Empty bar squats and RDLs","5"],["Empty bar bench press","20"]]},
+  blocks:[
+   {items:[E("deadlift","Deadlift",[...S(3,60,70,75),...S(2,80,85),...S(1,90,92.5)])]},
+   {items:[E("bench","Bench press",[...S(2,60,70,80,85,90),...S(5,80)])]},
+   {items:[E("skull","EZ or straight bar skull crushers",R(10,10,10,15,20))]}],
+  cardio:{items:[E("dbshrug","DB shrugs",R(20,20,20))]}},
+ /* 14 */ {rest:B, warm:{rounds:3, items:[["Empty bar squats","10"],["Lat stretches",""]]},
+  blocks:[
+   {ss:1, items:[E("squat","Back squat",S(5,50,55,60)), E("onearm","1-arm DB row",R(5,5,5))]},
+   {ss:1, items:[E("pullup","Weighted pull-ups",R(3,3,3)), E("dbrdl","DB RDLs",R(10,10,10))]},
+   {items:[E("revrow","Reverse grip barbell bent over row",R(10,10,10))]},
+   {items:[E("altcurl","Alternating DB curls",R(5,5,10,10))]}],
+  cardio:{ss:1, items:[E("rearlat","DB rear laterals",R(15,15)), E("hammer","DB hammer curls",R(20,20))]}},
+ /* 15 */ {rest:A, warm:{rounds:1, items:[["Shoulder and lat stretches",""]]},
+  blocks:[
+   {items:[E("ohp","Standing barbell overhead press",[5,6,7,8].map(r=>({r,p:.375})),{note:"Start at 37.5% of bench max and hold that weight as reps climb."})]},
+   {items:[E("curlpress","DB curl to overhead press",R(10,10,10))]},
+   {items:[E("cgbench","Close grip bench",R(5,5,5,8,8,8,10,10,10))]}],
+  cardio:{items:[E("ohext","Rope or band overhead triceps extensions",R(20,20,20,20))]}},
+ /* 16 */ {rest:A, warm:{rounds:3, items:[["Empty bar RDLs","10"],["Lat stretches",""]]},
+  blocks:[
+   {items:[E("snatch","Snatch grip deadlift",[...S(5,50,55,60),...S(10,50)],{note:"% of deadlift max."})]},
+   {ss:1, items:[E("chin","Weighted chin-ups",R(3,3,3,3)), E("pullover","DB pullovers",R(5,5,5,10))]},
+   {items:[E("onearm","1-arm DB rows",R(5,5,10))]},
+   {items:[E("bb21","Barbell 21s (7/7/7)",R(21,21,21))]}],
+  cardio:{items:[E("dbshrug","DB shrugs",R(20,20,20))]}},
+ /* 17 */ {tag:"Another big day", rest:A, warm:{rounds:3, items:[["Empty bar RDLs","10"],["Empty bar bench press","20"]]},
+  blocks:[
+   {items:[E("squat","Back squat",[...S(3,60,70,75,80),...S(4,60,70,75,80)])]},
+   {items:[E("bench","Bench press",[...S(4,60,70,75,80),...S(5,60,70,75,80)])]},
+   {items:[E("dbrdl","DB RDLs",R(5,5,5))]}],
+  cardio:{ss:1, items:[E("dbshrug","DB shrugs",R(20,20,20)), E("skull","EZ bar skull crushers",R(10,10,10))]}},
+ /* 18 */ {rest:[120,120], warm:{rounds:3, items:[["Empty bar bent over rows",""],["Lat stretches",""]]},
+  blocks:[
+   {items:[E("chin","Weighted chin-ups",R(3,3,3,3))]},
+   {ss:1, items:[E("csrow","Chest supported 2-arm DB rows",R(10,10,10)), E("rearlat","DB rear laterals",R(20,20,20))]},
+   {items:[E("pullup","Weighted pull-ups",R(3,3,3))]},
+   {items:[E("bbcurl","Heavy barbell curls",R(5,5,5,5,5))]}],
+  cardio:{items:[E("dbshrug","DB shrugs",R(20,20,20,20))]}},
+ /* 19 */ {rest:A, warm:{rounds:3, items:[["Empty bar RDLs","10"],["Empty bar bench press","20"]]},
+  blocks:[
+   {items:[E("deadlift","Deadlift",[{r:5,p:.6},{r:4,p:.7},{r:3,p:.75},{r:2,p:.8},{r:1,p:.9},{r:5,p:.65},{r:4,p:.75},{r:3,p:.8},{r:2,p:.85},{r:1,p:.925}])]},
+   {items:[E("bench","Bench press",S(10,50,55,60))]},
+   {items:[E("dip","Bench dips",R(10,10,10,10))]},
+   {items:[E("dbshrug","DB shrugs",R(20,20,20,20))]}],
+  cardio:{items:[E("kickback","DB triceps kickbacks",R(20,20,20),{note:"20 each arm."})]}},
+ /* 20 */ {rest:B, warm:{rounds:3, items:[["Empty bar RDLs","10"],["Lat stretches",""]]},
+  blocks:[
+   {items:[E("front","Front squat",S(3,50,55,60,60),{note:"% of back squat max."})]},
+   {ss:1, items:[E("pullover","DB pullovers",R(5,8,10,12)), E("bbrdl","Barbell RDLs",R(5,5,5,5))]},
+   {items:[E("onearm","1-arm DB rows",R(5,5,10,15))]},
+   {items:[E("bb21","Barbell 21s (7/7/7)",R(21,21,21))]}],
+  cardio:{items:[E("rearlat","DB rear laterals",R(10,20,30))]}}
+];
+const LIFT = {deadlift:"dead", snatch:"dead", squat:"squat", front:"squat", bench:"bench", ohp:"bench", sumo:"sumo"};
+const BW = new Set(["invrow","cgpush"]);
+/*DATA-END*/
+
+/* ================= state + storage ================= */
+const SKEY = "oaktree:v1";
+let state = {week:0, day:1, maxes:{bench:"215", squat:"295", dead:"295", sumo:"315", inc:5}, log:{}, warm:{}};
+let storageOK = true;
+
+async function loadState(){
+  let raw = null;
+  try{ raw = localStorage.getItem(SKEY); }catch(e){}
+  if(!raw){ try{ if(window.storage){ const r = await window.storage.get(SKEY); raw = r && r.value; } }catch(e){} }
+  if(raw){
+    try{ const s = JSON.parse(raw);
+      state = {...state, ...s, maxes:{...state.maxes, ...(s.maxes||{})}, log:s.log||{}, warm:s.warm||{}}; }catch(e){}
+  }
+  storageOK = await writeState();
+}
+async function writeState(){
+  const payload = JSON.stringify({week:state.week, day:state.day, maxes:state.maxes, log:state.log, warm:state.warm});
+  let ok = false;
+  try{ localStorage.setItem(SKEY, payload); ok = true; }catch(e){}
+  try{ if(window.storage){ await window.storage.set(SKEY, payload); ok = true; } }catch(e){}
+  return ok;
+}
+let saveTimer = null;
+function save(){ clearTimeout(saveTimer); saveTimer = setTimeout(async ()=>{ storageOK = await writeState(); }, 400); }
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) && n>0 ? n : null; };
+const dayN = () => state.week*4 + state.day;
+const K = (n,sec,bi,ii,si) => `${n}|${sec}${bi}|${ii}|${si}`;
+const mmss = s => Math.floor(s/60) + ":" + String(Math.floor(s%60)).padStart(2,"0");
+const pctLabel = p => +(p*100).toFixed(1) + "%";
+
+function wt(id, p){
+  const base = LIFT[id]; if(!base || p==null) return null;
+  const rm = num(state.maxes[base]); if(!rm) return null;
+  const inc = num(state.maxes.inc) || 5;
+  return Math.round(rm*p/inc)*inc;
+}
+function sections(def){
+  const out = def.blocks.map((blk,bi)=>({sec:"b", bi, blk}));
+  if(def.cardio) out.push({sec:"c", bi:0, blk:def.cardio});
+  return out;
+}
+function prevFor(n, id){
+  for(let m=n-1; m>=1; m--){
+    for(const {sec,bi,blk} of sections(DAYS[m-1])){
+      for(let ii=0; ii<blk.items.length; ii++){
+        const it = blk.items[ii]; if(it.id !== id) continue;
+        const ws = it.sets.map((_,si)=> (state.log[K(m,sec,bi,ii,si)]||{}).w).filter(Boolean);
+        if(ws.length) return {m, ws};
+      }
+    }
+  }
+  return null;
+}
+function dayCounts(n){
+  const def = DAYS[n-1]; let tot = 0, done = 0;
+  for(let r=0; r<def.warm.rounds; r++){ tot++; if(state.warm[`${n}|w|${r}`]) done++; }
+  for(const {sec,bi,blk} of sections(def))
+    blk.items.forEach((it,ii)=> it.sets.forEach((_,si)=>{ tot++; if((state.log[K(n,sec,bi,ii,si)]||{}).done) done++; }));
+  return {tot, done};
+}
+
+/* ================= rest timers ================= */
+const TIMERS = {};
+const tState = id => TIMERS[id] || (TIMERS[id] = {acc:0, startTs:null});
+const tEl = t => t.acc + (t.startTs ? (Date.now()-t.startTs)/1000 : 0);
+function syncTimer(id){
+  const d = $("td-"+id), b = $("tb-"+id); if(!d) return;
+  const t = tState(id), e = tEl(t);
+  d.textContent = mmss(e);
+  d.classList.toggle("running", !!t.startTs);
+  d.classList.toggle("ready", e >= +d.dataset.min);
+  if(b) b.textContent = t.startTs ? "Stop" : "Start";
+}
+window.timerToggle = id => { const t = tState(id);
+  if(t.startTs){ t.acc = tEl(t); t.startTs = null; } else t.startTs = Date.now(); syncTimer(id); };
+window.timerReset = id => { const t = tState(id); t.acc = 0; t.startTs = null; syncTimer(id); };
+setInterval(()=>{ for(const id in TIMERS) if(TIMERS[id].startTs) syncTimer(id); }, 500);
+
+/* ================= render ================= */
+function render(){ renderWeeks(); renderDays(); if(state.day===0) renderSetup(); else renderSession(); renderProgress(); }
+
+function renderWeeks(){
+  $("weeks").innerHTML = [0,1,2,3,4].map(w=>
+    `<button class="wk ${w===state.week?"on":""}" onclick="setWeek(${w})">Week ${w+1}</button>`).join("");
+}
+function renderDays(){
+  let h = `<button class="day ${state.day===0?"on":""}" onclick="setDay(0)">Setup</button>`;
+  for(let d=1; d<=4; d++){
+    const n = state.week*4 + d, c = dayCounts(n);
+    h += `<button class="day ${d===state.day?"on":""}" onclick="setDay(${d})">Day ${n}${c.done===c.tot?'<span class="tick">✓</span>':""}</button>`;
+  }
+  $("days").innerHTML = h;
+}
+function renderProgress(){
+  if(state.day===0){ $("prog").textContent = ""; return; }
+  const c = dayCounts(dayN());
+  $("prog").innerHTML = `<b>${c.done}</b>/${c.tot} sets`;
+}
+
+function renderEx(n, sec, bi, ii, it, tag){
+  const pv = prevFor(n, it.id), bw = BW.has(it.id);
+  const chips = it.sets.map((s,si)=>{
+    const k = K(n,sec,bi,ii,si), L = state.log[k] || {}, pw = wt(it.id, s.p);
+    const lab = s.p!=null ? `${s.r} @ ${pctLabel(s.p)}` : `${s.r} reps`;
+    return `<div class="set ${L.done?"done":""}" id="s-${k}"><div class="lab">${lab}</div>` +
+      (bw ? "" : `<input id="i-${k}" inputmode="decimal" value="${esc(L.w||"")}" placeholder="${pw||"lb"}" oninput="setW('${k}',this.value)" aria-label="${esc(it.name)} set ${si+1} weight">`) +
+      `<button class="chk" onclick="tog('${k}',${pw||0})" aria-label="Mark ${esc(it.name)} set ${si+1} done">✓</button></div>`;
+  }).join("");
+  const canFill = !bw && it.sets.length > 1 && it.sets.every(s => s.p == null);
+  const eq = canFill ? `<button class="eq" onclick="fillRow(${n},'${sec}',${bi},${ii},${it.sets.length})" aria-label="Set every ${esc(it.name)} set to the first weight">=</button>` : "";
+  return `<div class="ex"><div class="ex-top">${tag ? `<span class="ex-tag">${tag}</span>` : ""}<span class="ex-name">${esc(it.name)}</span></div>` +
+    (pv ? `<div class="prev">Last time (Day ${pv.m}): ${pv.ws.map(esc).join(" / ")}</div>` : "") +
+    (it.note ? `<div class="ex-note">${esc(it.note)}</div>` : "") +
+    `<div class="sets">${chips}${eq}</div></div>`;
+}
+
+function renderSession(){
+  const n = dayN(), def = DAYS[n-1];
+  let h = `<div class="session-title">Day ${n}</div>
+    <div class="session-sub">Week ${state.week+1}, session ${state.day} of 4${def.tag ? ". " + esc(def.tag) + "." : ""}</div>`;
+
+  const w = def.warm;
+  h += `<div class="block"><div class="eyebrow"><span>Warm-up${w.items.length>1 ? ", superset" : ""}</span>` +
+       `<span class="hint">${esc(w.hint || (w.rounds>1 ? w.rounds+" rounds" : ""))}</span></div>`;
+  w.items.forEach(([nm,reps]) => { h += `<div class="wu"><span>${esc(nm)}</span><span class="mono">${reps ? "× "+esc(reps) : ""}</span></div>`; });
+  h += `<div class="rounds">` + Array.from({length:w.rounds}, (_,r)=>{
+    const k = `${n}|w|${r}`;
+    return `<button class="rnd ${state.warm[k]?"done":""}" id="r-${k}" onclick="togW('${k}')">${w.rounds>1 ? "Round "+(r+1) : "Done"}</button>`;
+  }).join("") + `</div></div>`;
+
+  def.blocks.forEach((blk,bi)=>{
+    const rest = blk.rest !== undefined ? blk.rest : def.rest;
+    const head = `${bi+1}${blk.label ? ". "+esc(blk.label) : ""}${blk.ss ? (blk.label ? " superset" : ". Superset") : ""}`;
+    const restTxt = rest ? `Rest ${mmss(rest[0])}${rest[1]!==rest[0] ? "-"+mmss(rest[1]) : ""}` : "";
+    let inner = blk.items.map((it,ii)=> renderEx(n,"b",bi,ii,it, blk.items.length>1 ? `${bi+1}${"abcd"[ii]}` : "")).join("");
+    if(blk.ss) inner = `<div class="ss-wrap">${inner}</div>`;
+    let timer = "";
+    if(rest){
+      const tid = `${n}-${bi}`, t = tState(tid);
+      timer = `<div class="timer"><span class="t-disp" id="td-${tid}" data-min="${rest[0]}">${mmss(tEl(t))}</span>` +
+        `<button class="t-btn" id="tb-${tid}" onclick="timerToggle('${tid}')">${t.startTs?"Stop":"Start"}</button>` +
+        `<button class="t-btn" onclick="timerReset('${tid}')">Reset</button></div>`;
+    }
+    h += `<div class="block"><div class="eyebrow"><span>${head}</span><span class="hint">${restTxt}</span></div>${inner}${timer}</div>`;
+  });
+
+  if(def.cardio){
+    const c = def.cardio;
+    let inner = c.items.map((it,ii)=> renderEx(n,"c",0,ii,it, c.items.length>1 ? "abcd"[ii] : "")).join("");
+    if(c.ss) inner = `<div class="ss-wrap">${inner}</div>`;
+    h += `<div class="block"><div class="eyebrow"><span>Cardio${c.ss ? ", superset" : ""}</span><span class="hint"></span></div>${inner}</div>`;
+  } else if(def.cardioNote){
+    h += `<div class="block"><div class="eyebrow"><span>Cardio</span><span class="hint"></span></div><div class="ex-note" style="padding-top:8px">${esc(def.cardioNote)}</div></div>`;
+  }
+
+  h += `<button class="btn" onclick="resetDay()">Clear this day's checks and weights</button>`;
+  if(!storageOK) h += `<div class="storage-note">Storage isn't available here, so entries will reset when this page closes. Use Export on Setup to keep a copy.</div>`;
+  $("main").innerHTML = h;
+  for(const id in TIMERS) syncTimer(id);
+}
+
+function renderSetup(){
+  const m = state.maxes;
+  const fields = [
+    ["bench","Bench press 1RM","Also drives overhead press %"],
+    ["squat","Back squat 1RM","Also drives front squat %"],
+    ["dead","Deadlift 1RM","Also drives snatch grip deadlift %"],
+    ["sumo","Sumo deadlift 1RM",""],
+    ["inc","Rounding increment","5 lb default, 2.5 if you have small plates"]
+  ];
+  let h = `<div class="session-title">Setup</div><div class="setup">
+    <p>Every percentage in the plan calculates from these numbers. Typing a weight into a set overrides the suggestion, and checking a set with an empty box logs the suggested weight.</p>`;
+  fields.forEach(([k,lab,sm])=>{
+    h += `<div class="field"><label>${lab}${sm ? `<small>${sm}</small>` : ""}</label>
+      <input inputmode="decimal" value="${esc(m[k]??"")}" onchange="setMax('${k}',this.value)"></div>`;
+  });
+  h += `<button class="btn danger" onclick="resetAll()">Clear all checks and weights</button>
+    <div class="eyebrow" style="margin-top:26px"><span>Backup and restore</span><span class="hint">JSON</span></div>
+    <textarea id="io" class="io" placeholder="Export puts your data here and copies it. Paste a backup here and tap Restore to load it." spellcheck="false"></textarea>
+    <div class="btnrow"><button class="btn" onclick="exportData()">Export</button><button class="btn" onclick="importData()">Restore</button></div>
+    <div class="storage-note">${storageOK ? "Data saves on this device automatically." : "Storage isn't available here, so entries will reset when this page closes."}</div></div>`;
+  $("main").innerHTML = h;
+}
+
+/* ================= actions ================= */
+window.setWeek = w => { state.week = w; if(state.day===0) state.day = 1; save(); render(); window.scrollTo(0,0); };
+window.setDay = d => { state.day = d; save(); render(); window.scrollTo(0,0); };
+window.setMax = (k,v) => { state.maxes[k] = v.trim(); save(); };
+window.setW = (k,v) => {
+  const L = state.log[k] || (state.log[k] = {});
+  L.w = v.trim();
+  if(!L.w && !L.done) delete state.log[k];
+  save();
+};
+window.tog = (k,pw) => {
+  const L = state.log[k] || (state.log[k] = {});
+  L.done = !L.done;
+  if(L.done && !L.w && pw){ L.w = String(pw); const i = $("i-"+k); if(i) i.value = L.w; }
+  $("s-"+k).classList.toggle("done", L.done);
+  if(!L.done && !L.w) delete state.log[k];
+  save(); renderProgress(); renderDays();
+};
+window.fillRow = (n,sec,bi,ii,count) => {
+  const k0 = K(n,sec,bi,ii,0), first = (state.log[k0]||{}).w;
+  if(!first){ const i0 = $("i-"+k0); if(i0) i0.focus(); return; }
+  for(let si=1; si<count; si++){
+    const k = K(n,sec,bi,ii,si), L = state.log[k] || (state.log[k] = {});
+    L.w = first; const i = $("i-"+k); if(i) i.value = first;
+  }
+  save();
+};
+window.togW = k => {
+  if(state.warm[k]) delete state.warm[k]; else state.warm[k] = 1;
+  $("r-"+k).classList.toggle("done", !!state.warm[k]);
+  save(); renderProgress(); renderDays();
+};
+window.resetDay = () => {
+  const n = dayN(), pre = n + "|";
+  if(!confirm(`Clear every check and weight on Day ${n}?`)) return;
+  Object.keys(state.log).forEach(k=>{ if(k.startsWith(pre)) delete state.log[k]; });
+  Object.keys(state.warm).forEach(k=>{ if(k.startsWith(pre)) delete state.warm[k]; });
+  save(); render();
+};
+window.resetAll = () => {
+  if(!confirm("Clear every check and logged weight across all 20 days? Maxes are kept.")) return;
+  state.log = {}; state.warm = {}; save(); render();
+};
+window.exportData = () => {
+  const payload = JSON.stringify({v:1, plan:"oaktree", exported:new Date().toISOString(), maxes:state.maxes, log:state.log, warm:state.warm});
+  const ta = $("io"); ta.value = payload; ta.focus(); ta.select();
+  try{ navigator.clipboard.writeText(payload); }catch(e){}
+};
+window.importData = () => {
+  const ta = $("io");
+  if(!ta.value.trim()){ alert("Paste a backup into the box first."); return; }
+  try{
+    const s = JSON.parse(ta.value);
+    if(!s || typeof s.log !== "object") throw new Error("missing log");
+    if(s.maxes) state.maxes = {...state.maxes, ...s.maxes};
+    state.log = s.log; state.warm = s.warm || {};
+    save(); render();
+  }catch(e){ alert("That isn't a valid Oak Tree backup. Export creates the format this expects."); }
+};
+
+loadState().then(render);
+</script>
+</body>
+</html>
